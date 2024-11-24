@@ -1,5 +1,9 @@
 import os
 import psutil
+import ctypes
+from ctypes import POINTER, cast
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
 def set_brightness(brightness: int) -> str:
     """
@@ -13,10 +17,15 @@ def set_brightness(brightness: int) -> str:
 
 def set_volume(volume: int) -> str:
     """
-    Set the system volume.
+    Set the system volume on Windows.
     """
     if 0 <= volume <= 100:
-        os.system(f"amixer set Master {volume}%")
+        devices = AudioUtilities.GetSpeakers()
+        interface = devices.Activate(
+            IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        volume_interface = cast(interface, POINTER(IAudioEndpointVolume))
+        # Convert volume percentage to scalar (0.0 to 1.0)
+        volume_interface.SetMasterVolumeLevelScalar(volume / 100, None)
         return f"Volume set to {volume}%"
     else:
         return "Invalid volume percentage. Please use a value between 0 and 100."

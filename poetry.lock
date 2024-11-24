@@ -1050,6 +1050,21 @@ dev = ["black", "check-manifest", "coverage", "packaging", "pylint", "pyperf", "
 test = ["pytest", "pytest-xdist", "setuptools"]
 
 [[package]]
+name = "pycaw"
+version = "20240210"
+description = "Python Core Audio Windows Library"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pycaw-20240210-py3-none-any.whl", hash = "sha256:fbbe0ee67a7d32714240e26913266a386ae4375778c417a7e8ad6076eca62f1e"},
+    {file = "pycaw-20240210.tar.gz", hash = "sha256:55e49359e9f227053f4fa15817a02d4a7bc52fc3db32e123894719a123c41d06"},
+]
+
+[package.dependencies]
+comtypes = "*"
+psutil = "*"
+
+[[package]]
 name = "pydantic"
 version = "2.10.1"
 description = "Data validation using Python type hints"
@@ -4414,4 +4429,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "86b304cf87ac5a9a50dd9310e29566dd7553271441f7f1ee480a948245c96d6c"
+content-hash = "bf36f39e4a82e358acfacac6f6df6aa21b1a2ceb7445d76cec04c3a6ad882b6f"

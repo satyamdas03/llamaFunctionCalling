@@ -6,5 +6,6 @@
 - email notifications
 - check which file is taking up most space in a drive
 - web searches
+- alarm settings
 
 IMPLEMENT ALL THE ABOVE THINGS WITH VOICE AS WELL
