@@ -30,23 +30,30 @@ def get_battery() -> str:
         return f"Battery is at {battery.percent}%"
     return "Battery information not available."
 
-def get_storage_info(drive: str) -> str:
-    """
-    Get storage details for the specified drive.
-    """
-    # Ensure the drive ends with a backslash
-    if not drive.endswith("\\"):
-        drive += "\\"
+# def get_storage_info(drive: str) -> str:
+#     """
+#     Get storage details for the specified drive.
+#     """
+#     # Ensure the drive ends with a backslash
+#     if not drive.endswith("\\"):
+#         drive += "\\"
     
-    try:
-        usage = psutil.disk_usage(drive)
-        free_space = usage.free // (1024**3)  # Convert bytes to GB
-        total_space = usage.total // (1024**3)  # Convert bytes to GB
-        return f"Drive {drive} has {free_space} GB free out of {total_space} GB."
-    except FileNotFoundError:
-        return f"Drive {drive} is not available."
-    except Exception as e:
-        return f"An error occurred while accessing drive {drive}: {e}"
+#     try:
+#         usage = psutil.disk_usage(drive)
+#         free_space = usage.free // (1024**3)  # Convert bytes to GB
+#         total_space = usage.total // (1024**3)  # Convert bytes to GB
+#         return f"Drive {drive} has {free_space} GB free out of {total_space} GB."
+#     except FileNotFoundError:
+#         return f"Drive {drive} is not available."
+#     except Exception as e:
+#         return f"An error occurred while accessing drive {drive}: {e}"
+
+def get_storage_info(drive: str) -> str:
+    if not drive.endswith("\\") and os.name == "nt":  # For Windows
+        drive += "\\"
+    usage = psutil.disk_usage(drive)
+    return f"Drive {drive} has {usage.free // (1024**3)} GB free out of {usage.total // (1024**3)} GB."
+
 
 def open_application(app_path: str) -> str:
     """
