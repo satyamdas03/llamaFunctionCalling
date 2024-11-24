@@ -34,10 +34,12 @@ def process_command(user_input: str) -> str:
         return set_volume(function_result.arguments.volume)
     elif function_result.name == "get_battery":
         return get_battery()
-    elif "storage" in user_input:
-        return get_storage_info("C:")  # Example for drive C
-    elif "open" in user_input:
-        if "notepad" in user_input:
-            return open_application("C:\\Windows\\System32\\notepad.exe")
+    elif function_result.name == "get_storage_info":
+        drive = function_result.arguments.drive or "C:"  # Default to C drive
+        return get_storage_info(drive)
+    elif function_result.name == "open_application":
+        app_path = function_result.arguments.app_path or "C:\\Windows\\System32\\notepad.exe"  # Default to Notepad
+        return open_application(app_path)
     else:
-        return "Sorry, I didn't understand that."
+        return "Unknown command"
+
