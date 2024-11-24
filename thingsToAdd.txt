@@ -1,4 +1,4 @@
-- volume changing functionality
+- volume changing functionality(d)
 - brightness changing functionality
 - wifi on/off
 - any application opening and closing
