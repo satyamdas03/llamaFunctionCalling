@@ -29,3 +29,20 @@ def get_battery() -> str:
     if battery:
         return f"Battery is at {battery.percent}%"
     return "Battery information not available."
+
+def get_storage_info(drive: str) -> str:
+    """
+    Get storage details for the specified drive.
+    """
+    usage = psutil.disk_usage(drive)
+    return f"Drive {drive} has {usage.free // (1024**3)} GB free out of {usage.total // (1024**3)} GB."
+
+def open_application(app_path: str) -> str:
+    """
+    Open a specified application.
+    """
+    try:
+        os.startfile(app_path)
+        return f"Application at {app_path} opened successfully."
+    except Exception as e:
+        return f"Failed to open application: {e}"

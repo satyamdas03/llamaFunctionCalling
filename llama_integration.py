@@ -1,7 +1,7 @@
 import instructor
 from openai import OpenAI
 from schemas import FunctionCall
-from functions import set_brightness, set_volume, get_battery
+from functions import set_brightness, set_volume, get_battery, get_storage_info, open_application
 import os
 from dotenv import load_dotenv
 
@@ -23,7 +23,7 @@ def process_command(user_input: str) -> str:
         model="meta-llama/llama-3.2-3b-instruct:free",
         response_model=FunctionCall,
         messages=[
-            {"role": "system", "content": "You are an AI assistant controlling system brightness, volume, and battery status. Generate function calls based on user requests."},
+            {"role": "system", "content": "You are an AI assistant controlling system functions. Generate function calls based on user requests."},
             {"role": "user", "content": user_input}
         ],
     )
@@ -34,5 +34,10 @@ def process_command(user_input: str) -> str:
         return set_volume(function_result.arguments.volume)
     elif function_result.name == "get_battery":
         return get_battery()
+    elif "storage" in user_input:
+        return get_storage_info("C:")  # Example for drive C
+    elif "open" in user_input:
+        if "notepad" in user_input:
+            return open_application("C:\\Windows\\System32\\notepad.exe")
     else:
-        return "Unknown command"
+        return "Sorry, I didn't understand that."
