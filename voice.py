@@ -22,7 +22,7 @@ def listen_command() -> str:
 
 def speak_response(response: str):
     """
-    Speak a given response back to the user.
+    Speak a given response back to the user with a female voice.
     """
     try:
         # Initialize COM for multi-threaded environments
@@ -30,6 +30,19 @@ def speak_response(response: str):
         
         # Initialize the text-to-speech engine
         engine = pyttsx3.init()
+        
+        # Get all available voices
+        voices = engine.getProperty('voices')
+        
+        # Select a female voice (usually index 1, but depends on your system)
+        for voice in voices:
+            if "female" in voice.name.lower():
+                engine.setProperty('voice', voice.id)
+                break
+        else:
+            # Fallback if no female voice is found
+            engine.setProperty('voice', voices[0].id)
+        
         engine.say(response)
         engine.runAndWait()
     finally:

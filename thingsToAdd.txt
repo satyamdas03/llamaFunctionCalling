@@ -1,5 +1,5 @@
 - volume changing functionality(d)
-- brightness changing functionality
+- brightness changing functionality(d)
 - wifi on/off
 - any application opening and closing
 - bluetooth on/off
