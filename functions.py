@@ -4,14 +4,20 @@ import ctypes
 from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import wmi
 
 def set_brightness(brightness: int) -> str:
     """
-    Set the screen brightness (if supported by the system).
+    Set the screen brightness on Windows.
     """
     if 0 <= brightness <= 100:
-        os.system(f"xrandr --output eDP-1 --brightness {brightness / 100}")
-        return f"Brightness set to {brightness}%"
+        try:
+            wmi_interface = wmi.WMI(namespace='root\\WMI')
+            methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
+            methods.WmiSetBrightness(brightness, 0)  # Second argument is timeout (0 = immediate)
+            return f"Brightness set to {brightness}%"
+        except Exception as e:
+            return f"Failed to set brightness: {e}"
     else:
         return "Invalid brightness percentage. Please use a value between 0 and 100."
 
