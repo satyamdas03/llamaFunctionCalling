@@ -8,8 +8,11 @@ import wmi
 import pythoncom
 import requests
 # from bs4 import BeautifulSoup
-# from transformers import pipeline
+from transformers import pipeline
 from dotenv import load_dotenv
+
+# Load summarization pipeline (use a small model for speed)
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 # Load environment variables
 load_dotenv()
@@ -114,7 +117,7 @@ def open_application(app_path: str) -> str:
     
 def search_web(query: str) -> str:
     """
-    Perform a web search using Serper API.
+    Perform a web search using Serper API and provide summarized information with citations.
     """
     try:
         url = "https://google.serper.dev/search"
@@ -122,28 +125,41 @@ def search_web(query: str) -> str:
             "Content-Type": "application/json",
             "X-API-KEY": SERPER_API_KEY
         }
-        payload = {"q": query}
+        payload = {
+            "q": query,  # The search query
+        }
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
         data = response.json()
 
-        # Debug the response from Serper API
-        print(f"Serper API Response: {data}")
-
-        # Extract and return top search results
+        # Extract top search results
         if "organic" in data:
             results = data["organic"]
-            if not results:
-                return "No results found for your query."
-            top_results = [
-                f"{i+1}. {result['title']} - {result['link']}"
-                for i, result in enumerate(results[:5])
+            snippets = [
+                result["snippet"] for result in results[:5] if "snippet" in result
             ]
-            return "Top Search Results:\n" + "\n".join(top_results)
+            links = [
+                f"{i+1}. {result['title']} - {result['link']}"
+                for i, result in enumerate(results[:5])  # Limit to top 5 results
+            ]
+
+            # Summarize the combined snippets
+            if snippets:
+                combined_text = " ".join(snippets)
+                summary = summarizer(
+                    combined_text, max_length=100, min_length=30, do_sample=False
+                )[0]["summary_text"]
+            else:
+                summary = "No relevant information found to summarize."
+
+            # Log the citations (links)
+            print("Citations:")
+            for link in links:
+                print(link)
+
+            # Return summary with citations in the response
+            return f"Summary: {summary}\n\nCitations:\n" + "\n".join(links)
         else:
-            return "No results found for your query."
+            return "No search results found."
     except Exception as e:
-        return f"Error during web search: {e}"
-
-
-
+        return f"An error occurred while performing the web search: {e}"
