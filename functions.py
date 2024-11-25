@@ -43,21 +43,36 @@ def set_brightness(brightness: int) -> str:
             pythoncom.CoUninitialize()
     else:
         return "Invalid brightness percentage. Please use a value between 0 and 100."
+    
+
 
 def set_volume(volume: int) -> str:
     """
     Set the system volume on Windows.
     """
     if 0 <= volume <= 100:
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(
-            IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume_interface = cast(interface, POINTER(IAudioEndpointVolume))
-        # Convert volume percentage to scalar (0.0 to 1.0)
-        volume_interface.SetMasterVolumeLevelScalar(volume / 100, None)
-        return f"Volume set to {volume}%"
+        try:
+            # Initialize COM for multi-threaded environments
+            pythoncom.CoInitialize()
+            
+            devices = AudioUtilities.GetSpeakers()
+            interface = devices.Activate(
+                IAudioEndpointVolume._iid_, CLSCTX_ALL, None
+            )
+            volume_interface = cast(interface, POINTER(IAudioEndpointVolume))
+            
+            # Convert volume percentage to scalar (0.0 to 1.0)
+            volume_interface.SetMasterVolumeLevelScalar(volume / 100, None)
+            return f"Volume set to {volume}%"
+        except Exception as e:
+            return f"Failed to set volume: {e}"
+        finally:
+            # Uninitialize COM to clean up resources
+            pythoncom.CoUninitialize()
     else:
         return "Invalid volume percentage. Please use a value between 0 and 100."
+
+    
 
 def get_battery() -> str:
     """
