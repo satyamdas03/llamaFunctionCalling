@@ -6,7 +6,15 @@ from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import wmi
 import pythoncom
+import requests
+# from bs4 import BeautifulSoup
+# from transformers import pipeline
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
+
+SERPER_API_KEY = os.getenv("SERPER_API_KEY")
 
 def set_brightness(brightness: int) -> str:
     """
@@ -103,3 +111,35 @@ def open_application(app_path: str) -> str:
         return f"Application at {app_path} opened successfully."
     except Exception as e:
         return f"Failed to open application: {e}"
+    
+def search_web(query: str) -> str:
+    """
+    Perform a web search using Serper API.
+    """
+    try:
+        url = "https://google.serper.dev/search"
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-KEY": SERPER_API_KEY
+        }
+        payload = {
+            "q": query,  # The search query
+        }
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+
+        # Extract top search results
+        if "organic" in data:
+            results = data["organic"]
+            top_results = [
+                f"{i+1}. {result['title']} - {result['link']}"
+                for i, result in enumerate(results[:5])  # Limit to top 5 results
+            ]
+            return "Top Search Results:\n" + "\n".join(top_results)
+        else:
+            return "No search results found."
+    except Exception as e:
+        return f"An error occurred while performing the web search: {e}"
+
+

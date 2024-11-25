@@ -1,7 +1,7 @@
 import instructor
 from openai import OpenAI
 from schemas import FunctionCall
-from functions import set_brightness, set_volume, get_battery, get_storage_info, open_application
+from functions import set_brightness, set_volume, get_battery, get_storage_info, open_application, search_web
 import os
 from dotenv import load_dotenv
 
@@ -40,6 +40,8 @@ def process_command(user_input: str) -> str:
     elif function_result.name == "open_application":
         app_path = function_result.arguments.app_path or "C:\\Windows\\System32\\notepad.exe"  # Default to Notepad
         return open_application(app_path)
+    elif function_result.name == "search_web":
+        return search_web(function_result.arguments.query)
     else:
         return "Unknown command"
 
