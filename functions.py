@@ -122,24 +122,28 @@ def search_web(query: str) -> str:
             "Content-Type": "application/json",
             "X-API-KEY": SERPER_API_KEY
         }
-        payload = {
-            "q": query,  # The search query
-        }
+        payload = {"q": query}
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
         data = response.json()
 
-        # Extract top search results
+        # Debug the response from Serper API
+        print(f"Serper API Response: {data}")
+
+        # Extract and return top search results
         if "organic" in data:
             results = data["organic"]
+            if not results:
+                return "No results found for your query."
             top_results = [
                 f"{i+1}. {result['title']} - {result['link']}"
-                for i, result in enumerate(results[:5])  # Limit to top 5 results
+                for i, result in enumerate(results[:5])
             ]
             return "Top Search Results:\n" + "\n".join(top_results)
         else:
-            return "No search results found."
+            return "No results found for your query."
     except Exception as e:
-        return f"An error occurred while performing the web search: {e}"
+        return f"Error during web search: {e}"
+
 
 
