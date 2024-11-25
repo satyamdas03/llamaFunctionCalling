@@ -5,6 +5,22 @@ from ctypes import POINTER, cast
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import wmi
+import pythoncom
+
+# def set_brightness(brightness: int) -> str:
+#     """
+#     Set the screen brightness on Windows.
+#     """
+#     if 0 <= brightness <= 100:
+#         try:
+#             wmi_interface = wmi.WMI(namespace='root\\WMI')
+#             methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
+#             methods.WmiSetBrightness(brightness, 0)  # Second argument is timeout (0 = immediate)
+#             return f"Brightness set to {brightness}%"
+#         except Exception as e:
+#             return f"Failed to set brightness: {e}"
+#     else:
+#         return "Invalid brightness percentage. Please use a value between 0 and 100."
 
 def set_brightness(brightness: int) -> str:
     """
@@ -12,12 +28,19 @@ def set_brightness(brightness: int) -> str:
     """
     if 0 <= brightness <= 100:
         try:
+            # Initialize COM for multi-threaded environments
+            pythoncom.CoInitialize()
+            
             wmi_interface = wmi.WMI(namespace='root\\WMI')
             methods = wmi_interface.WmiMonitorBrightnessMethods()[0]
             methods.WmiSetBrightness(brightness, 0)  # Second argument is timeout (0 = immediate)
+            
             return f"Brightness set to {brightness}%"
         except Exception as e:
             return f"Failed to set brightness: {e}"
+        finally:
+            # Uninitialize COM
+            pythoncom.CoUninitialize()
     else:
         return "Invalid brightness percentage. Please use a value between 0 and 100."
 

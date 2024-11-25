@@ -33,18 +33,26 @@ def speak_response(response: str):
         
         # Get all available voices
         voices = engine.getProperty('voices')
+        print("Available voices:")
+        for i, voice in enumerate(voices):
+            print(f"Voice {i}: {voice.name} (ID: {voice.id})")
         
-        # Select a female voice (usually index 1, but depends on your system)
+        # Attempt to set a female voice
+        female_voice_found = False
         for voice in voices:
             if "female" in voice.name.lower():
                 engine.setProperty('voice', voice.id)
+                female_voice_found = True
                 break
-        else:
-            # Fallback if no female voice is found
-            engine.setProperty('voice', voices[0].id)
         
+        if not female_voice_found:
+            print("No female voice found, falling back to default.")
+            engine.setProperty('voice', voices[0].id)  # Fallback
+        
+        # Speak the response
         engine.say(response)
         engine.runAndWait()
     finally:
         # Ensure COM is uninitialized to clean up resources
         pythoncom.CoUninitialize()
+
