@@ -28,6 +28,7 @@ def process_command(user_input: str) -> str:
                 {"role": "system", "content": "You are an AI assistant. You can perform system functions like setting brightness and volume, fetching battery and storage info, opening applications, and performing web searches. Always provide accurate function names and arguments in your response."},
                 {"role": "user", "content": user_input},
             ],
+            max_tokens=512,  # Limit output to a reasonable length
         )
         
         # Debugging function name and arguments
@@ -52,6 +53,7 @@ def process_command(user_input: str) -> str:
         else:
             return "Unknown command. Ensure your input is supported."
     except Exception as e:
+        # Handle specific errors like max_tokens and provide a useful response
+        if "max_tokens" in str(e):
+            return "The output is incomplete due to a max_tokens length limit. Please refine your query."
         return f"An error occurred while processing the command: {e}"
-
-
