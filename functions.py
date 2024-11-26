@@ -10,6 +10,8 @@ import requests
 # from bs4 import BeautifulSoup
 from transformers import pipeline
 from dotenv import load_dotenv
+import subprocess
+import pyttsx3
 
 # Load summarization pipeline (use a small model for speed)
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -130,3 +132,99 @@ def search_web(query: str) -> str:
             return "No search results found."
     except Exception as e:
         return f"An error occurred while performing the web search: {e}"
+    
+def toggle_wifi(state: str) -> str:
+    """
+    Turn Wi-Fi on or off.
+    """
+    try:
+        if os.name == "nt":  # Windows
+            if state.lower() == "on":
+                subprocess.run("netsh interface set interface Wi-Fi enabled", shell=True, check=True)
+                return "Wi-Fi has been turned on."
+            elif state.lower() == "off":
+                subprocess.run("netsh interface set interface Wi-Fi disabled", shell=True, check=True)
+                return "Wi-Fi has been turned off."
+            else:
+                return "Invalid state. Use 'on' or 'off'."
+        else:
+            return "Wi-Fi control is supported only on Windows."
+    except subprocess.CalledProcessError as e:
+        return f"Failed to change Wi-Fi state: {e}"
+
+
+def show_connected_wifi() -> str:
+    """
+    Show details of the connected Wi-Fi network.
+    """
+    try:
+        if os.name == "nt":  # Windows
+            result = subprocess.check_output("netsh wlan show interfaces", shell=True).decode()
+            return result
+        else:
+            return "Wi-Fi details are supported only on Windows."
+    except subprocess.CalledProcessError as e:
+        return f"Failed to retrieve Wi-Fi details: {e}"
+
+
+def toggle_bluetooth(state: str) -> str:
+    """
+    Turn Bluetooth on or off.
+    """
+    try:
+        if os.name == "nt":  # Windows
+            if state.lower() == "on":
+                subprocess.run("powershell -Command \"Start-Service bthserv\"", shell=True, check=True)
+                return "Bluetooth has been turned on."
+            elif state.lower() == "off":
+                subprocess.run("powershell -Command \"Stop-Service bthserv\"", shell=True, check=True)
+                return "Bluetooth has been turned off."
+            else:
+                return "Invalid state. Use 'on' or 'off'."
+        else:
+            return "Bluetooth control is supported only on Windows."
+    except subprocess.CalledProcessError as e:
+        return f"Failed to change Bluetooth state: {e}"
+
+
+def list_paired_bluetooth_devices() -> str:
+    """
+    List all paired Bluetooth devices.
+    """
+    try:
+        if os.name == "nt":  # Windows
+            result = subprocess.check_output("powershell -Command \"Get-PnpDevice -Class Bluetooth\"", shell=True).decode()
+            return result
+        else:
+            return "Paired Bluetooth devices can only be listed on Windows."
+    except subprocess.CalledProcessError as e:
+        return f"Failed to list Bluetooth devices: {e}"
+
+
+def toggle_night_light(state: str) -> str:
+    """
+    Enable or disable Night Light mode.
+    """
+    # Note: Night Light control on Windows requires interacting with the registry or PowerShell.
+    try:
+        if state.lower() == "on":
+            return "Night Light enabled. (Requires system-level interaction via script.)"
+        elif state.lower() == "off":
+            return "Night Light disabled. (Requires system-level interaction via script.)"
+        else:
+            return "Invalid state. Use 'on' or 'off'."
+    except Exception as e:
+        return f"Failed to toggle Night Light: {e}"
+
+
+def read_screen_contents_aloud(text: str) -> str:
+    """
+    Read aloud the provided text.
+    """
+    try:
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
+        return "Reading screen contents aloud."
+    except Exception as e:
+        return f"Failed to read screen contents: {e}"

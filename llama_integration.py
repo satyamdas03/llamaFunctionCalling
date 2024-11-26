@@ -1,7 +1,20 @@
 import instructor
 from openai import OpenAI
 from schemas import FunctionCall
-from functions import set_brightness, set_volume, get_battery, get_storage_info, open_application, search_web
+from functions import (
+    set_brightness,
+    set_volume,
+    get_battery,
+    get_storage_info,
+    open_application,
+    search_web,
+    toggle_wifi,
+    show_connected_wifi,
+    toggle_bluetooth,
+    list_paired_bluetooth_devices,
+    toggle_night_light,
+    read_screen_contents_aloud,
+)
 import os
 from dotenv import load_dotenv
 
@@ -25,7 +38,7 @@ def process_command(user_input: str) -> str:
             model="meta-llama/llama-3.2-3b-instruct:free",
             response_model=FunctionCall,
             messages=[
-                {"role": "system", "content": "You are an AI assistant. You can perform system functions like setting brightness and volume, fetching battery and storage info, opening applications, and performing web searches. Always provide accurate function names and arguments in your response."},
+                {"role": "system", "content": "You are an AI assistant. You can control system settings and perform tasks. Always provide accurate function names and arguments in your response."},
                 {"role": "user", "content": user_input},
             ],
             max_tokens=512,  # Limit output to a reasonable length
@@ -50,6 +63,18 @@ def process_command(user_input: str) -> str:
             return open_application(app_path)
         elif function_result.name == "search_web":
             return search_web(function_result.arguments.query)
+        elif function_result.name == "toggle_wifi":
+            return toggle_wifi(function_result.arguments.state)
+        elif function_result.name == "show_connected_wifi":
+            return show_connected_wifi()
+        elif function_result.name == "toggle_bluetooth":
+            return toggle_bluetooth(function_result.arguments.state)
+        elif function_result.name == "list_paired_bluetooth_devices":
+            return list_paired_bluetooth_devices()
+        elif function_result.name == "toggle_night_light":
+            return toggle_night_light(function_result.arguments.state)
+        elif function_result.name == "read_screen_contents_aloud":
+            return read_screen_contents_aloud(function_result.arguments.text)
         else:
             return "Unknown command. Ensure your input is supported."
     except Exception as e:
