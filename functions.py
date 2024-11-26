@@ -98,55 +98,6 @@ def open_application(app_path: str) -> str:
     except Exception as e:
         return f"Failed to open application: {e}"
     
-# def search_web(query: str) -> str:
-#     """
-#     Perform a web search using Serper API and provide summarized information with citations.
-#     """
-#     try:
-#         url = "https://google.serper.dev/search"
-#         headers = {
-#             "Content-Type": "application/json",
-#             "X-API-KEY": SERPER_API_KEY
-#         }
-#         payload = {
-#             "q": query,  # The search query
-#         }
-#         response = requests.post(url, json=payload, headers=headers)
-#         response.raise_for_status()
-#         data = response.json()
-
-#         # Extract top search results
-#         if "organic" in data:
-#             results = data["organic"]
-#             snippets = [
-#                 result["snippet"] for result in results[:5] if "snippet" in result
-#             ]
-#             links = [
-#                 f"{i+1}. {result['title']} - {result['link']}"
-#                 for i, result in enumerate(results[:5])  # Limit to top 5 results
-#             ]
-
-#             # Summarize the combined snippets
-#             if snippets:
-#                 combined_text = " ".join(snippets)
-#                 summary = summarizer(
-#                     combined_text, max_length=100, min_length=30, do_sample=False
-#                 )[0]["summary_text"]
-#             else:
-#                 summary = "No relevant information found to summarize."
-
-#             # Log the citations (links)
-#             print("Citations:")
-#             for link in links:
-#                 print(link)
-
-#             # Return summary with citations in the response
-#             return f"Summary: {summary}\n\nCitations:\n" + "\n".join(links)
-#         else:
-#             return "No search results found."
-#     except Exception as e:
-#         return f"An error occurred while performing the web search: {e}"
-
 def search_web(query: str) -> str:
     """
     Perform a web search using Serper API and summarize the results.
