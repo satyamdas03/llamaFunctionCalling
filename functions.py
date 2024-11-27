@@ -12,6 +12,9 @@ from transformers import pipeline
 from dotenv import load_dotenv
 import subprocess
 import pyttsx3
+import win32serviceutil
+from PIL import ImageGrab
+import pytesseract
 
 # Load summarization pipeline (use a small model for speed)
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -139,11 +142,20 @@ def toggle_wifi(state: str) -> str:
     """
     try:
         if os.name == "nt":  # Windows
+            # Get the correct Wi-Fi interface name
+            interfaces = subprocess.check_output("netsh interface show interface", shell=True).decode()
+            for line in interfaces.splitlines():
+                if "Wi-Fi" in line or "Wireless" in line:
+                    interface_name = line.split()[-1]  # Extract interface name
+                    break
+            else:
+                return "No Wi-Fi interface found."
+
             if state.lower() == "on":
-                subprocess.run("netsh interface set interface Wi-Fi enabled", shell=True, check=True)
+                subprocess.run(f"netsh interface set interface \"{interface_name}\" enabled", shell=True, check=True)
                 return "Wi-Fi has been turned on."
             elif state.lower() == "off":
-                subprocess.run("netsh interface set interface Wi-Fi disabled", shell=True, check=True)
+                subprocess.run(f"netsh interface set interface \"{interface_name}\" disabled", shell=True, check=True)
                 return "Wi-Fi has been turned off."
             else:
                 return "Invalid state. Use 'on' or 'off'."
@@ -151,6 +163,7 @@ def toggle_wifi(state: str) -> str:
             return "Wi-Fi control is supported only on Windows."
     except subprocess.CalledProcessError as e:
         return f"Failed to change Wi-Fi state: {e}"
+
 
 
 def show_connected_wifi() -> str:
@@ -167,23 +180,44 @@ def show_connected_wifi() -> str:
         return f"Failed to retrieve Wi-Fi details: {e}"
 
 
+# def toggle_bluetooth(state: str) -> str:
+#     """
+#     Turn Bluetooth on or off.
+#     """
+#     try:
+#         if os.name == "nt":  # Windows
+#             if state.lower() == "on":
+#                 subprocess.run("powershell -Command \"Start-Service bthserv\"", shell=True, check=True)
+#                 return "Bluetooth has been turned on."
+#             elif state.lower() == "off":
+#                 subprocess.run("powershell -Command \"Stop-Service bthserv\"", shell=True, check=True)
+#                 return "Bluetooth has been turned off."
+#             else:
+#                 return "Invalid state. Use 'on' or 'off'."
+#         else:
+#             return "Bluetooth control is supported only on Windows."
+#     except subprocess.CalledProcessError as e:
+#         return f"Failed to change Bluetooth state: {e}"
+
 def toggle_bluetooth(state: str) -> str:
     """
     Turn Bluetooth on or off.
     """
     try:
         if os.name == "nt":  # Windows
+            service_name = "bthserv"  # Bluetooth Support Service
+
             if state.lower() == "on":
-                subprocess.run("powershell -Command \"Start-Service bthserv\"", shell=True, check=True)
+                win32serviceutil.StartService(service_name)
                 return "Bluetooth has been turned on."
             elif state.lower() == "off":
-                subprocess.run("powershell -Command \"Stop-Service bthserv\"", shell=True, check=True)
+                win32serviceutil.StopService(service_name)
                 return "Bluetooth has been turned off."
             else:
                 return "Invalid state. Use 'on' or 'off'."
         else:
             return "Bluetooth control is supported only on Windows."
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         return f"Failed to change Bluetooth state: {e}"
 
 
@@ -205,23 +239,42 @@ def toggle_night_light(state: str) -> str:
     """
     Enable or disable Night Light mode.
     """
-    # Note: Night Light control on Windows requires interacting with the registry or PowerShell.
     try:
-        if state.lower() == "on":
-            return "Night Light enabled. (Requires system-level interaction via script.)"
-        elif state.lower() == "off":
-            return "Night Light disabled. (Requires system-level interaction via script.)"
+        if os.name == "nt":  # Windows
+            if state.lower() == "on":
+                subprocess.run(
+                    "powershell -Command \"Start-Process powershell -ArgumentList 'Add-Type -AssemblyName PresentationFramework; [System.Windows.SystemParameters]::NightMode = $true' -Verb RunAs\"",
+                    shell=True,
+                    check=True,
+                )
+                return "Night Light has been enabled."
+            elif state.lower() == "off":
+                subprocess.run(
+                    "powershell -Command \"Start-Process powershell -ArgumentList 'Add-Type -AssemblyName PresentationFramework; [System.Windows.SystemParameters]::NightMode = $false' -Verb RunAs\"",
+                    shell=True,
+                    check=True,
+                )
+                return "Night Light has been disabled."
+            else:
+                return "Invalid state. Use 'on' or 'off'."
         else:
-            return "Invalid state. Use 'on' or 'off'."
-    except Exception as e:
+            return "Night Light control is supported only on Windows."
+    except subprocess.CalledProcessError as e:
         return f"Failed to toggle Night Light: {e}"
 
 
-def read_screen_contents_aloud(text: str) -> str:
+
+def read_screen_contents_aloud(text: str = None) -> str:
     """
-    Read aloud the provided text.
+    Read aloud the provided text or visible screen contents.
     """
     try:
+        if not text:
+            # Capture the screen and extract text using OCR
+            screen = ImageGrab.grab()
+            text = pytesseract.image_to_string(screen)
+
+        # Use text-to-speech to read the text
         engine = pyttsx3.init()
         engine.say(text)
         engine.runAndWait()
