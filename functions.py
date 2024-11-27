@@ -15,6 +15,14 @@ import pyttsx3
 import win32serviceutil
 from PIL import ImageGrab
 import pytesseract
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.date import DateTrigger
+from datetime import datetime
+import time
+
+# Initialize the scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 # Load summarization pipeline (use a small model for speed)
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -287,3 +295,36 @@ def read_screen_contents_aloud(text: str = None) -> str:
         return "Reading screen contents aloud."
     except Exception as e:
         return f"Failed to read screen contents: {e}"
+    
+
+def schedule_task(task: str, date_time: str) -> str:
+    """
+    Schedule a task or reminder at a specific date and time.
+    Args:
+        task (str): The task to be reminded about.
+        date_time (str): The date and time in the format 'YYYY-MM-DD HH:MM:SS'.
+    """
+    try:
+        # Parse the date_time string into a datetime object
+        schedule_time = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
+
+        # Add the task to the scheduler
+        scheduler.add_job(
+            func=send_reminder,
+            trigger=DateTrigger(run_date=schedule_time),
+            args=[task],
+            id=f"reminder_{date_time}",
+            replace_existing=True,
+        )
+        return f"Task '{task}' scheduled for {date_time}."
+    except Exception as e:
+        return f"Failed to schedule task: {e}"
+
+def send_reminder(task: str):
+    """
+    Send a reminder when the task is due.
+    Args:
+        task (str): The task to remind about.
+    """
+    print(f"Reminder: {task}")  # You can replace this with a notification or sound alert
+    speak_response(f"Reminder: {task}")

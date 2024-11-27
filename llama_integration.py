@@ -14,6 +14,7 @@ from functions import (
     list_paired_bluetooth_devices,
     toggle_night_light,
     read_screen_contents_aloud,
+    schedule_task,
 )
 import os
 from dotenv import load_dotenv
@@ -75,6 +76,10 @@ def process_command(user_input: str) -> str:
             return toggle_night_light(function_result.arguments.state)
         elif function_result.name == "read_screen_contents_aloud":
             return read_screen_contents_aloud(function_result.arguments.text)
+        elif function_result.name == "schedule_task":
+            task = function_result.arguments.task or "No task provided."
+            date_time = function_result.arguments.date_time or "1970-01-01 00:00:00"
+            return schedule_task(task, date_time)
         else:
             return "Unknown command. Ensure your input is supported."
     except Exception as e:

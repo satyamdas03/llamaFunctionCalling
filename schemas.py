@@ -11,8 +11,10 @@ class FunctionArguments(BaseModel):
     query: Optional[str] = Field(None, description="Search query for the web.")  # Correctly supports search_web
     state: Optional[str] = Field(None, description="State to toggle (on/off).")
     text: Optional[str] = Field(None, description="Text to read aloud.")
+    task: Optional[str] = Field(None, description="The task description for the reminder.")
+    date_time: Optional[str] = Field(None, description="The date and time for the task in 'YYYY-MM-DD HH:MM:SS' format.")
 
 
 class FunctionCall(BaseModel):
-    name: Literal["set_brightness", "set_volume", "get_battery", "get_storage_info", "open_application", "get_weather", "get_latest_news", "search_web", "toggle_wifi", "show_connected_wifi", "toggle_bluetooth", "list_paired_bluetooth_devices", "toggle_night_light", "read_screen_contents_aloud"]
+    name: Literal["set_brightness", "set_volume", "get_battery", "get_storage_info", "open_application", "get_weather", "get_latest_news", "search_web", "toggle_wifi", "show_connected_wifi", "toggle_bluetooth", "list_paired_bluetooth_devices", "toggle_night_light", "read_screen_contents_aloud","schedule_task",]
     arguments: FunctionArguments
