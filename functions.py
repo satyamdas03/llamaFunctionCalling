@@ -19,6 +19,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime
 import time
+from voice import speak_response
+
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
@@ -187,25 +189,6 @@ def show_connected_wifi() -> str:
     except subprocess.CalledProcessError as e:
         return f"Failed to retrieve Wi-Fi details: {e}"
 
-
-# def toggle_bluetooth(state: str) -> str:
-#     """
-#     Turn Bluetooth on or off.
-#     """
-#     try:
-#         if os.name == "nt":  # Windows
-#             if state.lower() == "on":
-#                 subprocess.run("powershell -Command \"Start-Service bthserv\"", shell=True, check=True)
-#                 return "Bluetooth has been turned on."
-#             elif state.lower() == "off":
-#                 subprocess.run("powershell -Command \"Stop-Service bthserv\"", shell=True, check=True)
-#                 return "Bluetooth has been turned off."
-#             else:
-#                 return "Invalid state. Use 'on' or 'off'."
-#         else:
-#             return "Bluetooth control is supported only on Windows."
-#     except subprocess.CalledProcessError as e:
-#         return f"Failed to change Bluetooth state: {e}"
 
 def toggle_bluetooth(state: str) -> str:
     """
