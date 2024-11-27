@@ -201,24 +201,30 @@ def show_connected_wifi() -> str:
 
 def toggle_bluetooth(state: str) -> str:
     """
-    Turn Bluetooth on or off.
+    Enable or disable Bluetooth by starting or stopping the Bluetooth Support Service.
     """
     try:
-        if os.name == "nt":  # Windows
-            service_name = "bthserv"  # Bluetooth Support Service
+        import win32serviceutil
+        service_name = "bthserv"
 
-            if state.lower() == "on":
-                win32serviceutil.StartService(service_name)
-                return "Bluetooth has been turned on."
-            elif state.lower() == "off":
-                win32serviceutil.StopService(service_name)
-                return "Bluetooth has been turned off."
-            else:
-                return "Invalid state. Use 'on' or 'off'."
+        # Get the current state of the Bluetooth service
+        current_state = win32serviceutil.QueryServiceStatus(service_name)[1]
+
+        if state.lower() == "on":
+            if current_state == 4:  # 4 = Running
+                return "Bluetooth is already turned on."
+            win32serviceutil.StartService(service_name)
+            return "Bluetooth turned on successfully."
+        elif state.lower() == "off":
+            if current_state == 1:  # 1 = Stopped
+                return "Bluetooth is already turned off."
+            win32serviceutil.StopService(service_name)
+            return "Bluetooth turned off successfully."
         else:
-            return "Bluetooth control is supported only on Windows."
+            return "Invalid Bluetooth state. Use 'on' or 'off'."
     except Exception as e:
         return f"Failed to change Bluetooth state: {e}"
+
 
 
 def list_paired_bluetooth_devices() -> str:
