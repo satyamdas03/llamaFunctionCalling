@@ -39,7 +39,7 @@ def process_command(user_input: str) -> str:
             model="meta-llama/llama-3.2-3b-instruct:free",
             response_model=FunctionCall,
             messages=[
-                {"role": "system", "content": "You are an AI assistant. You can control system settings and perform tasks. Always provide accurate function names and arguments in your response."},
+                {"role": "system", "content": "You are an AI assistant. You can control system settings, search the web, and perform tasks. Always provide accurate function names and arguments in your response."},
                 {"role": "user", "content": user_input},
             ],
             max_tokens=512,  # Limit output to a reasonable length
