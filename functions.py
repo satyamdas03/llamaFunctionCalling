@@ -12,6 +12,19 @@ from transformers import pipeline
 from dotenv import load_dotenv
 import subprocess
 import pyttsx3
+import win32serviceutil
+from PIL import ImageGrab
+import pytesseract
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.date import DateTrigger
+from datetime import datetime
+import time
+from voice import speak_response
+
+
+# Initialize the scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 # Load summarization pipeline (use a small model for speed)
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -90,19 +103,38 @@ def get_storage_info(drive: str) -> str:
     return f"Drive {drive} has {usage.free // (1024**3)} GB free out of {usage.total // (1024**3)} GB."
 
 
-def open_application(app_path: str) -> str:
+def open_application(app_name: str) -> str:
     """
-    Open a specified application.
+    Open a specified application by name.
     """
     try:
-        os.startfile(app_path)
-        return f"Application at {app_path} opened successfully."
+        # List of common application paths
+        common_apps = {
+            "notepad": "notepad.exe",
+            "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "brave": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+        }
+
+        # Check if the app is in common apps
+        if app_name.lower() in common_apps:
+            os.startfile(common_apps[app_name.lower()])
+            return f"{app_name.capitalize()} opened successfully."
+
+        # Search for the application in system PATH
+        result = subprocess.run(f"where {app_name}", shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            app_path = result.stdout.strip()
+            os.startfile(app_path)
+            return f"{app_name.capitalize()} opened successfully."
+        else:
+            return f"Application '{app_name}' not found. Ensure it is installed and in PATH."
     except Exception as e:
-        return f"Failed to open application: {e}"
+        return f"Failed to open {app_name}: {e}"
+
     
 def search_web(query: str) -> str:
     """
-    Perform a web search using Serper API and summarize the results.
+    Perform a web search using Serper API and summarize results for specific queries.
     """
     try:
         url = "https://google.serper.dev/search"
@@ -132,6 +164,7 @@ def search_web(query: str) -> str:
             return "No search results found."
     except Exception as e:
         return f"An error occurred while performing the web search: {e}"
+
     
 def toggle_wifi(state: str) -> str:
     """
@@ -139,11 +172,20 @@ def toggle_wifi(state: str) -> str:
     """
     try:
         if os.name == "nt":  # Windows
+            # Get the correct Wi-Fi interface name
+            interfaces = subprocess.check_output("netsh interface show interface", shell=True).decode()
+            for line in interfaces.splitlines():
+                if "Wi-Fi" in line or "Wireless" in line:
+                    interface_name = line.split()[-1]  # Extract interface name
+                    break
+            else:
+                return "No Wi-Fi interface found."
+
             if state.lower() == "on":
-                subprocess.run("netsh interface set interface Wi-Fi enabled", shell=True, check=True)
+                subprocess.run(f"netsh interface set interface \"{interface_name}\" enabled", shell=True, check=True)
                 return "Wi-Fi has been turned on."
             elif state.lower() == "off":
-                subprocess.run("netsh interface set interface Wi-Fi disabled", shell=True, check=True)
+                subprocess.run(f"netsh interface set interface \"{interface_name}\" disabled", shell=True, check=True)
                 return "Wi-Fi has been turned off."
             else:
                 return "Invalid state. Use 'on' or 'off'."
@@ -151,6 +193,7 @@ def toggle_wifi(state: str) -> str:
             return "Wi-Fi control is supported only on Windows."
     except subprocess.CalledProcessError as e:
         return f"Failed to change Wi-Fi state: {e}"
+
 
 
 def show_connected_wifi() -> str:
@@ -169,22 +212,30 @@ def show_connected_wifi() -> str:
 
 def toggle_bluetooth(state: str) -> str:
     """
-    Turn Bluetooth on or off.
+    Enable or disable Bluetooth by starting or stopping the Bluetooth Support Service.
     """
     try:
-        if os.name == "nt":  # Windows
-            if state.lower() == "on":
-                subprocess.run("powershell -Command \"Start-Service bthserv\"", shell=True, check=True)
-                return "Bluetooth has been turned on."
-            elif state.lower() == "off":
-                subprocess.run("powershell -Command \"Stop-Service bthserv\"", shell=True, check=True)
-                return "Bluetooth has been turned off."
-            else:
-                return "Invalid state. Use 'on' or 'off'."
+        import win32serviceutil
+        service_name = "bthserv"
+
+        # Get the current state of the Bluetooth service
+        current_state = win32serviceutil.QueryServiceStatus(service_name)[1]
+
+        if state.lower() == "on":
+            if current_state == 4:  # 4 = Running
+                return "Bluetooth is already turned on."
+            win32serviceutil.StartService(service_name)
+            return "Bluetooth turned on successfully."
+        elif state.lower() == "off":
+            if current_state == 1:  # 1 = Stopped
+                return "Bluetooth is already turned off."
+            win32serviceutil.StopService(service_name)
+            return "Bluetooth turned off successfully."
         else:
-            return "Bluetooth control is supported only on Windows."
-    except subprocess.CalledProcessError as e:
+            return "Invalid Bluetooth state. Use 'on' or 'off'."
+    except Exception as e:
         return f"Failed to change Bluetooth state: {e}"
+
 
 
 def list_paired_bluetooth_devices() -> str:
@@ -205,26 +256,78 @@ def toggle_night_light(state: str) -> str:
     """
     Enable or disable Night Light mode.
     """
-    # Note: Night Light control on Windows requires interacting with the registry or PowerShell.
     try:
-        if state.lower() == "on":
-            return "Night Light enabled. (Requires system-level interaction via script.)"
-        elif state.lower() == "off":
-            return "Night Light disabled. (Requires system-level interaction via script.)"
+        if os.name == "nt":  # Windows
+            if state.lower() == "on":
+                subprocess.run(
+                    "powershell -Command \"Start-Process powershell -ArgumentList 'Add-Type -AssemblyName PresentationFramework; [System.Windows.SystemParameters]::NightMode = $true' -Verb RunAs\"",
+                    shell=True,
+                    check=True,
+                )
+                return "Night Light has been enabled."
+            elif state.lower() == "off":
+                subprocess.run(
+                    "powershell -Command \"Start-Process powershell -ArgumentList 'Add-Type -AssemblyName PresentationFramework; [System.Windows.SystemParameters]::NightMode = $false' -Verb RunAs\"",
+                    shell=True,
+                    check=True,
+                )
+                return "Night Light has been disabled."
+            else:
+                return "Invalid state. Use 'on' or 'off'."
         else:
-            return "Invalid state. Use 'on' or 'off'."
-    except Exception as e:
+            return "Night Light control is supported only on Windows."
+    except subprocess.CalledProcessError as e:
         return f"Failed to toggle Night Light: {e}"
 
 
-def read_screen_contents_aloud(text: str) -> str:
+
+def read_screen_contents_aloud(text: str = None) -> str:
     """
-    Read aloud the provided text.
+    Read aloud the provided text or visible screen contents.
     """
     try:
+        if not text:
+            # Capture the screen and extract text using OCR
+            screen = ImageGrab.grab()
+            text = pytesseract.image_to_string(screen)
+
+        # Use text-to-speech to read the text
         engine = pyttsx3.init()
         engine.say(text)
         engine.runAndWait()
         return "Reading screen contents aloud."
     except Exception as e:
         return f"Failed to read screen contents: {e}"
+    
+
+def schedule_task(task: str, date_time: str) -> str:
+    """
+    Schedule a task or reminder at a specific date and time.
+    Args:
+        task (str): The task to be reminded about.
+        date_time (str): The date and time in the format 'YYYY-MM-DD HH:MM:SS'.
+    """
+    try:
+        # Parse the date_time string into a datetime object
+        schedule_time = datetime.strptime(date_time, "%Y-%m-%d %H:%M:%S")
+
+        # Add the task to the scheduler
+        scheduler.add_job(
+            func=send_reminder,
+            trigger=DateTrigger(run_date=schedule_time),
+            args=[task],
+            id=f"reminder_{date_time}",
+            replace_existing=True,
+        )
+        return f"Task '{task}' scheduled for {date_time}."
+    except Exception as e:
+        return f"Failed to schedule task: {e}"
+
+def send_reminder(task: str):
+    """
+    Send a reminder when the task is due.
+    Args:
+        task (str): The task to remind about.
+    """
+    print(f"Reminder: {task}")  # You can replace this with a notification or sound alert
+    speak_response(f"Reminder: {task}")
