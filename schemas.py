@@ -9,7 +9,7 @@ class FunctionArguments(BaseModel):
     drive: Optional[str] = Field(None, description="The drive to check for storage information.")
     city: Optional[str] = Field(None, description="The name of the city for weather updates.")
     category: Optional[str] = Field(None, description="The news category (e.g., general, technology, sports).")
-    query: Optional[str] = Field(None, description="Search query for the web.")  # Correctly supports search_web
+    query: Optional[str] = Field(None, description="Search query for advancements or general web search.")
     state: Optional[str] = Field(None, description="State to toggle (on/off).")
     text: Optional[str] = Field(None, description="Text to read aloud.")
     task: Optional[str] = Field(None, description="The task description for the reminder.")

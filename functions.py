@@ -165,6 +165,7 @@ def search_web(query: str) -> str:
     except Exception as e:
         return f"An error occurred while performing the web search: {e}"
 
+
     
 def toggle_wifi(state: str) -> str:
     """
