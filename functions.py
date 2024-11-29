@@ -134,7 +134,7 @@ def open_application(app_name: str) -> str:
     
 def search_web(query: str) -> str:
     """
-    Perform a web search using Serper API and summarize the results.
+    Perform a web search using Serper API and summarize results for specific queries.
     """
     try:
         url = "https://google.serper.dev/search"
@@ -164,6 +164,7 @@ def search_web(query: str) -> str:
             return "No search results found."
     except Exception as e:
         return f"An error occurred while performing the web search: {e}"
+
     
 def toggle_wifi(state: str) -> str:
     """
