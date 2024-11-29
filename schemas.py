@@ -4,7 +4,8 @@ from pydantic import BaseModel, Field
 class FunctionArguments(BaseModel):
     brightness: Optional[int] = Field(None, description="The desired brightness percentage (0-100).")
     volume: Optional[int] = Field(None, description="The desired volume percentage (0-100).")
-    app_path: Optional[str] = Field(None, description="The path to the application to be opened.")
+    #app_path: Optional[str] = Field(None, description="The path to the application to be opened.")
+    app_name: Optional[str] = Field(None, description="The name of the application to open.")
     drive: Optional[str] = Field(None, description="The drive to check for storage information.")
     city: Optional[str] = Field(None, description="The name of the city for weather updates.")
     category: Optional[str] = Field(None, description="The news category (e.g., general, technology, sports).")

@@ -103,15 +103,34 @@ def get_storage_info(drive: str) -> str:
     return f"Drive {drive} has {usage.free // (1024**3)} GB free out of {usage.total // (1024**3)} GB."
 
 
-def open_application(app_path: str) -> str:
+def open_application(app_name: str) -> str:
     """
-    Open a specified application.
+    Open a specified application by name.
     """
     try:
-        os.startfile(app_path)
-        return f"Application at {app_path} opened successfully."
+        # List of common application paths
+        common_apps = {
+            "notepad": "notepad.exe",
+            "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+            "brave": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+        }
+
+        # Check if the app is in common apps
+        if app_name.lower() in common_apps:
+            os.startfile(common_apps[app_name.lower()])
+            return f"{app_name.capitalize()} opened successfully."
+
+        # Search for the application in system PATH
+        result = subprocess.run(f"where {app_name}", shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            app_path = result.stdout.strip()
+            os.startfile(app_path)
+            return f"{app_name.capitalize()} opened successfully."
+        else:
+            return f"Application '{app_name}' not found. Ensure it is installed and in PATH."
     except Exception as e:
-        return f"Failed to open application: {e}"
+        return f"Failed to open {app_name}: {e}"
+
     
 def search_web(query: str) -> str:
     """

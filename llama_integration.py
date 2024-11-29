@@ -60,8 +60,8 @@ def process_command(user_input: str) -> str:
             drive = function_result.arguments.drive or "C:"  # Default to C drive
             return get_storage_info(drive)
         elif function_result.name == "open_application":
-            app_path = function_result.arguments.app_path or "C:\\Windows\\System32\\notepad.exe"  # Default to Notepad
-            return open_application(app_path)
+            app_name = function_result.arguments.app_name or "notepad"
+            return open_application(app_name)
         elif function_result.name == "search_web":
             return search_web(function_result.arguments.query)
         elif function_result.name == "toggle_wifi":
